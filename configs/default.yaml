@@ -1,0 +1,132 @@
+# Default Configuration for Active Learning Experiments
+# CIFAR-10 Dataset with Hybrid Sampling Strategy
+
+experiment:
+  name: "cifar10_hybrid_v_final"
+  description: "Final version combining best of all methods"
+  seed: 42
+  output_dir: "./results"
+  save_checkpoints: true
+  checkpoint_frequency: 5  # Save every N rounds
+
+data:
+  dataset: "cifar10"
+  data_dir: "./data"
+  batch_size: 128
+  num_workers: 4
+  augmentation: true
+  validation_split: 0.1
+  
+  # Data augmentation settings
+  augmentation_config:
+    random_crop: true
+    crop_padding: 4
+    random_horizontal_flip: true
+    normalize: true
+    normalization_mean: [0.4914, 0.4822, 0.4465]
+    normalization_std: [0.2023, 0.1994, 0.2010]
+
+model:
+  architecture: "vgg16"
+  pretrained: false
+  num_classes: 10
+  dropout: 0.5
+  batch_norm: true
+  weight_decay: 0.002
+  feature_dim: 512
+
+training:
+  optimizer: "sgd"
+  learning_rate: 0.1
+  momentum: 0.9
+  nesterov: true
+  
+  # Learning rate schedule
+  lr_scheduler: "multi_step"
+  lr_milestones: [60, 120, 160]
+  lr_gamma: 0.2
+  
+  # Training duration per round
+  epochs_per_round: 50
+  max_epochs: 200
+  
+  # Early stopping
+  early_stopping: true
+  patience: 20
+  min_delta: 0.001
+
+active_learning:
+  strategy: "hybrid"  # Options: random, uncertainty, coreset, adversarial, hybrid
+  
+  # Sample selection parameters
+  initial_samples: 1000
+  samples_per_round: 1000
+  num_rounds: 10
+  total_budget: 10000
+  
+  # Hybrid strategy weights
+  hybrid_weights:
+    adversarial: 0.4
+    uncertainty: 0.3
+    diversity: 0.3
+  
+  # Adversarial sampling config
+  adversarial_config:
+    learning_rate_discriminator: 0.001
+    discriminator_steps: 5
+    flip_gradient_lambda: 1.0
+    
+  # Uncertainty sampling config
+  uncertainty_config:
+    method: "entropy"  # Options: entropy, margin, least_confidence
+    
+  # Diversity/CoreSet config
+  diversity_config:
+    method: "kcenter"  # Options: kcenter, kmeans, herding
+    distance_metric: "euclidean"
+
+metrics:
+  # Metrics to track
+  track_accuracy: true
+  track_loss: true
+  track_feature_diversity: true
+  track_sample_distribution: true
+  track_training_time: true
+  track_memory_usage: true
+  
+  # Evaluation settings
+  eval_frequency: 1  # Evaluate every N epochs
+  test_batch_size: 256
+
+logging:
+  use_tensorboard: true
+  tensorboard_dir: "./runs"
+  log_level: "INFO"
+  save_plots: true
+  plot_format: "png"
+  
+visualization:
+  generate_learning_curves: true
+  generate_sample_distribution_plots: true
+  generate_feature_space_plots: true
+  generate_comparison_plots: true
+  
+  # Plot settings
+  figsize: [10, 6]
+  dpi: 300
+  style: "seaborn"
+
+reproducibility:
+  deterministic: true
+  benchmark: false  # Set to true for faster training if reproducibility not critical
+  
+# Comparison baselines to run
+baselines:
+  - name: "random"
+    enabled: true
+  - name: "uncertainty_entropy"
+    enabled: true
+  - name: "coreset_kcenter"
+    enabled: true
+  - name: "adversarial"
+    enabled: true
